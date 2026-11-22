@@ -1,63 +1,110 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Real Time Chat App</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body>
-    <h1 class="text-3xl font-bold underline text-center my-4">Real Time Chat App</h1>
+  </head>
+  <body>
+    <h1 class="text-3xl font-bold underline text-center my-4">
+      Real Time Chat App
+    </h1>
 
-    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-        <div id="chat" class="h-[500px] overflow-y-auto p-6 space-y-4 bg-gray-50"></div>
-        <div class="p-4 border-t border-gray-200 bg-white flex items-center gap-3 w-full">
-    <input
-        id="msg"
-        placeholder="Message..."
-        class="flex-1 min-w-0 px-5 py-4 bg-gray-100 border border-transparent rounded-xl outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
-    />
-
-    <button
-        onclick="sendMessage()"
-        class="shrink-0 bg-blue-500 hover:bg-blue-700 text-white font-medium px-5 py-4 rounded-xl transition"
+    <div
+      class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"
     >
-        Send
-    </button>
-</div>
+      <div
+        id="chat"
+        class="h-[500px] overflow-y-auto p-6 space-y-4 bg-gray-50"
+      ></div>
+      <div
+        class="p-4 border-t border-gray-200 bg-white flex items-center gap-3 w-full"
+      >
+        <input
+          id="msg"
+          placeholder="Message..."
+          class="flex-1 min-w-0 px-5 py-4 bg-gray-100 border border-transparent rounded-xl outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+        />
+
+        <button
+          onclick="sendMessage()"
+          class="shrink-0 bg-blue-500 hover:bg-blue-700 text-white font-medium px-5 py-4 rounded-xl transition"
+        >
+          Send
+        </button>
+      </div>
     </div>
 
     <script>
-        const ws = new WebSocket("ws://localhost:8080");
-        const msgInput = document.getElementById("msg");
-        const sendButton = document.querySelector("button");
+      const ws = new WebSocket("ws://localhost:8080");
+      const msgInput = document.getElementById("msg");
+      const sendButton = document.querySelector("button");
 
-        ws.onmessage = (event) => {
-            const chatDiv = document.getElementById("chat");
-            const message = document.createElement("div");
-            message.textContent = event.data;
-            chatDiv.appendChild(message);
+      const myId = Math.floor(1000 + Math.random() * 9000);
+      const myName = `User #${myId}`;
+
+      ws.onmessage = (event) => {
+        const chatDiv = document.getElementById("chat");
+        const message = document.createElement("div");
+        const data = JSON.parse(event.data);
+        
+        const isMine = data.senderId === myId;
+
+        
+        const messageWrapper = document.createElement("div");
+
+        messageWrapper.className = `flex flex-col ${
+          isMine ? "items-end" : "items-start"
+        }`;
+
+        const sender = document.createElement("span");
+        sender.textContent = data.sender;
+        sender.className = "text-xs text-gray-500 mb-1 px-2";
+
+        message.textContent = data.message;
+
+        message.className = `
+        max-w-[75%] px-4 py-3 rounded-2xl text-sm shadow-sm
+        ${
+          isMine
+            ? "bg-blue-500 text-white rounded-br-sm"
+            : "bg-white text-gray-800 border border-gray-200 rounded-bl-sm"
+        }
+    `;
+        messageWrapper.appendChild(sender);
+        messageWrapper.appendChild(message);
+
+        chatDiv.appendChild(messageWrapper);
+      };
+
+      ws.onclose = () => {
+        const chatDiv = document.getElementById("chat");
+        const msg = document.createElement("p");
+        msg.innerHTML = "Connection closed";
+        msg.style.color = "red";
+        msg.style.fontWeight = "bold";
+        chatDiv.appendChild(msg);
+      };
+
+      function sendMessage() {
+        if (msgInput.value.trim()) {
+
+          const data = {
+            sender: myName,
+            senderId: myId,
+            message: msgInput.value.trim()
         };
 
-        ws.onclose = () =>{
-            const chatDiv = document.getElementById("chat");
-            const msg = document.createElement("p");
-            msg.textContent = "Connection closed";
-            chatDiv.appendChild(msg);
+        ws.send(JSON.stringify(data));
+          msgInput.value = "";
         }
+      }
 
-        function sendMessage() {
-            
-            if(msgInput.value.trim()){
-                ws.send(msgInput.value);
-                msgInput.value = "";
-            }
-        }
-
-        // Allow sending with Enter key
-    msgInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') sendMessage();
-    });
+      // Allow sending with Enter key
+      msgInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendMessage();
+      });
     </script>
-</body>
+  </body>
 </html>
