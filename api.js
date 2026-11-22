@@ -5,6 +5,7 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use(express.static("public"));
 
 const DB = "data/db.json";
 
@@ -42,11 +43,34 @@ app.post("/register", (req, res) => {
     return res.status(400).json({ error: "Username already exists" });
   }
 
-  const newUser = { username, password };
+  const newUser = { id: Date.now(), username, password };
   db.users.push(newUser);
   saveDB(db);
   res.status(201).json({ message: "User registered successfully" });
 });
+
+// LOGIN
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+
+  const db = readDB();
+
+  const user = db.users.find(
+    (user) =>
+      user.username.toLowerCase() === (username || "").toLowerCase() &&
+      user.password === password
+  );
+
+  if (!user) {
+    return res.status(401).json({ error: "Invalid username or password" });
+  }
+
+  res.json({
+    message: "Login successful",
+    user: { id: user.id, username: user.username }
+  });
+});
+
 
 
 //Search user

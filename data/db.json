@@ -1,5 +1,16 @@
 {
-  "users": [],
+  "users": [
+    {
+      "id": 1795335267872,
+      "username": "sushan",
+      "password": "1234"
+    },
+    {
+      "id": 1795335275699,
+      "username": "sushan2",
+      "password": "1234"
+    }
+  ],
   "conversations": [],
   "messages": []
 }
