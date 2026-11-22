@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Time Chat App</title>
+</head>
+<body>
+    <div id="chat"></div>
+    <input id="msg" placeholder="Type your message here..." />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const ws = new WebSocket("ws://localhost:8080");
+        const msgInput = document.getElementById("msg");
+        const sendButton = document.querySelector("button");
+
+        ws.onmessage = (event) => {
+            const chatDiv = document.getElementById("chat");
+            const message = document.createElement("div");
+            message.textContent = event.data;
+            chatDiv.appendChild(message);
+        };
+
+        ws.onclose = () =>{
+            const chatDiv = document.getElementById("chat");
+            const msg = document.createElement("p");
+            msg.textContent = "Connection closed";
+            chatDiv.appendChild(msg);
+        }
+
+        function sendMessage() {
+            
+            if(msgInput.value.trim()){
+                ws.send(msgInput.value);
+                msgInput.value = "";
+            }
+        }
+
+        // Allow sending with Enter key
+    msgInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+    </script>
+</body>
+</html>
